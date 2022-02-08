@@ -1,0 +1,43 @@
+﻿@model Album2.ViewModels.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<form class="pt-4" asp-action="Register" asp-controller="Account" asp-anti-forgery="false">
+    <div class="validation" asp-validation-summary="ModelOnly"></div>
+    <div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="Username">Введите имя пользователя:</label>
+            <input class="form-control" type="text" asp-for="Username" required />
+            <span asp-validation-for="Username" />
+        </div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="Email">Введите Email:</label>
+            <input class="form-control" type="email" asp-for="Email" required />
+            <span asp-validation-for="Email" />
+        </div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="Password">Введите пароль:</label>
+            <input class="form-control" type="password" asp-for="Password" required />
+            <span asp-validation-for="Password" />
+        </div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="ConfirmPassword">Повторите пароль:</label>
+            <input class="form-control" type="password" asp-for="ConfirmPassword" required />
+            <span asp-validation-for="ConfirmPassword" />
+        </div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="Birthdate">Дата рождения:</label>
+            <input class="form-control" type="date" asp-for="Birthdate" />
+            <span asp-validation-for="Birthdate" />
+        </div>
+        <div class="form-group col-md-12">
+            <label class="form-label" asp-for="Comment">Комментарий:</label>
+            <textarea class="form-control" asp-for="Comment" rows="3" placeholder="Ваш кооментарий"></textarea>
+            <span asp-validation-for="Comment" />
+        </div>
+        <div class="col-md-3">
+            <input class="btn btn-outline-primary" type="submit" value="Регистрация" />
+        </div>
+    </div>
+</form>

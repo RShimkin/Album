@@ -1,0 +1,160 @@
+﻿@model IEnumerable<Picture>
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<script type="text/javascript">
+
+    let before = []
+
+    function getOrder() {
+        const pics = [...document.querySelectorAll('.draggable')];
+        const arr = pics.map((el) => el.id);
+        return arr;
+    }
+
+    function getDragAfterElement(cont, y) {
+        const drags = [...cont.querySelectorAll('.draggable:not(.dragging)')];
+        console.log(drags)
+        return drags.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child }
+            }
+            else { return closest }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    $(document).ready(function () {
+
+        before = getOrder()
+
+        const delalb = document.querySelector('.del-album');
+        $(delalb).on('click', (e) => {
+            if ($(delalb).text() !== "Точно удалить альбом?") {
+                //$(delalb).text("Точно удалить альбом?")
+                $(delalb).toggleClass('d-none');
+                $('#hidden').toggleClass('d-none');
+                setTimeout(//() => $(delalb).text("Удалить альбом"), 5000);
+                    () => {
+                        $(delalb).toggleClass('d-none');
+                        $('#hidden').toggleClass('d-none');
+                    }, 5000
+                )
+            } else {
+
+                $('#hidden').click();
+            }
+        })
+
+        const links = document.querySelectorAll('.del-link');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                //const buftext = $('#buf').text();
+                const elem = e.currentTarget;
+                links.forEach((el) => {
+                    if (el != elem) {
+                        if (el.classList.contains('active')) {
+                            el.classList.remove('active');
+                            $(el).text('Удалить');
+                        }
+                    }
+                })
+
+                if (elem.innerText !== 'Точно удалить?') {
+                    //$('#buf').text($(elem).text());
+                    elem.innerText = 'Точно удалить?';
+                    elem.classList.add('active');
+                } else {
+                    const parent = elem.parentElement;
+                    const id = parent.id;
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("DeletePicture")',
+                        data: { id: id },
+                        dataType: "json",
+                        success: (msg) => {
+                            if (msg) {
+                                console.log(`${msg} deleted`);
+                                $(parent).fadeOut(1000);
+                            }
+                        },
+                        error: () => console.log(`ERROR! ${id} is not deleted`)
+                    })
+                }
+            })
+        })
+
+        const btn = document.querySelector('#btn');
+        btn.addEventListener("click", () => {
+            const after = getOrder();
+            let res = true;
+            for (i = 0; i < after.length; i++) {
+                if (before[i] !== after[i])
+                    res = false;
+            }
+
+            if (!res) {
+                $.ajax({
+                type: "POST",
+                url: '@Url.Action("DragDrop")',
+                data: { pics: after },
+                dataType: "json",
+                success: (msg) => {
+                    if (msg) {
+                        console.log(msg);
+                    }
+                },
+                error: () => console.log("ERROR")
+            });
+            }
+        });
+
+        const draggables = document.querySelectorAll('.draggable');
+        const cont = document.querySelector('.drag-cont');
+
+        cont.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(cont, e.clientY);
+            const draggable = document.querySelector('.dragging');
+            if (afterElement == null) {
+                cont.appendChild(draggable);
+            } else {
+                cont.insertBefore(draggable, afterElement);
+            }
+        })
+
+        draggables.forEach(item => {
+
+            item.addEventListener('dragstart', () => {
+                item.classList.add('dragging');
+            })
+
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+            })
+        })
+    });
+</script>
+
+<div id="album">@ViewBag.album.Name</div>
+<a class="image" id="btn" href="#!"><button>Сохранить порядок</button></a>
+<a class="del-album red-color" href="#">Удалить альбом</a>
+<a id="hidden" class="d-none" asp-controller="Albums" asp-action="DeleteAlbum" asp-route-id="@ViewBag.album.Id">Точно удалить альбом?</a>
+<div class="drag-cont">
+    @foreach (var pic in Model)
+    {
+        <div id="@pic.Id" class="draggable" draggable="true">
+            @if (pic.Image != null)
+            {
+                <img style='width:300px; height:100px;' src="data:image/jpeg;base64,@(Convert.ToBase64String(pic.Image))" />
+            }
+            <h4 class="image">@pic.Name</h4>
+            <a href="#!" class="del-link red-color">Удалить</a>
+        </div>
+    }
+</div>
+
+

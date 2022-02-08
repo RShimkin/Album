@@ -1,0 +1,74 @@
+﻿
+<script type="text/javascript">
+    var files = null
+
+    $(document).ready(() => {
+        $('#files')
+            .bind('change', (e) => {
+                const elem = e.currentTarget;
+                //console.log(elem);
+                if (elem.files.length > 1) {
+                    elem.innerText = `${elem.files.length} фото`;
+                    $('#filelabel').text(`${elem.files.length} фото`);
+                    console.log('много');
+                }
+                else {
+                    //elem.innerText = elem.files[0].name;
+                    $('#filelabel').text(elem.files[0].name);
+                    console.log('один');
+                }
+                files = elem.files;
+            })
+
+        $('.btn-light')
+            .on('click', (e) => {
+                e.preventDefault();
+                console.log(files);
+                let formData = new FormData();
+                [...files].forEach((file) => {
+                    formData.append("Images", file)
+                })
+                formData.append("Album", "f1b7ce78-31f2-492c-8057-9d2df55762aa");
+                
+                $.ajax({
+                    type: "POST",
+                    url: `https://localhost:44392/Albums/UploadPictures`, //'@Url.Action("Add")',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: (count) => {
+                        console.log(count);
+                        const div = document.querySelector('#two');
+                        [...files].forEach((file) => {
+                            const img = document.createElement("img");
+                            img.src = URL.createObjectURL(file);
+                            img.onload = function () {
+                                URL.revokeObjectURL(this.src);
+                            }
+                            div.appendChild(img);
+                        })
+                    },
+                    error: () => console.log("ERROR")
+                })
+            })
+    })
+</script>
+
+<div id="one">
+    <div class="cont-small">
+        <form id="form" class="form-inline" method="post" enctype="multipart/form-data">
+
+            <div class="d-inline-block">
+                <label id="filelabel" for="files" class="btn btn-dark form-control">Файл</label>
+                <input id="files" style="visibility:hidden;" type="file" name="Images" multiple>
+            </div>
+
+            <div class="d-inline-block">
+                <input class="btn btn-light" type="submit" value="Upload" />
+            </div>
+
+        </form>
+    </div>
+    <div id="two"></div>
+</div>

@@ -1,0 +1,132 @@
+﻿@model List<Comment>
+@{
+    ViewData["Title"] = "Picture";
+}
+<script type="text/javascript">
+
+    $(document).ready(() => {
+
+        $('#sharelink').click((e) => {
+            e.preventDefault();
+            const pic = "@ViewBag.pic.Id"
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("SharePictureAjax")',
+                data: { id: pic },
+                dataType: "json",
+                success: (shares) => {
+                    console.log(shares);
+                    let markup = "";
+                    shares.forEach((share) => {
+                        markup += `<div>${share}</div>`;
+                    })
+                    $('#shares').html(markup);
+                 },
+                error: () => console.log("ERROR")
+             })
+        })
+
+        $('#com-form').on('submit', (e) => {
+            e.preventDefault();
+        })
+
+        $('#com-btn').on('click', (e) => {
+            e.preventDefault();
+            const comtext = $('#com-area').val()
+            const picture = "@ViewBag.pic.Id"
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("SharedCommentPictureAjax")',
+                    data: {text: comtext, pic: picture },
+                    dataType: "json",
+                    success: (msg) => {
+                        console.log(msg);
+                        const div = document.querySelector('#coms');
+                        const markup = document.createElement("div");
+                        markup.classList = "row mb-2";
+                        markup.innerHTML = `<div class="col-md-3">
+                                        <h5>Вы :</h5><i>${msg}</i></div>
+                                        <div class="col-md-9"><div>${comtext}</div><br /></div>`;
+                        div.appendChild(markup);
+                    },
+                    error: () => console.log("ERROR")
+             })
+        })
+
+    })
+</script>
+
+<div class="text-center mt-3">
+
+    <div>
+        <h4>@ViewBag.pic.Name</h4>
+    </div>
+    @if (!String.IsNullOrEmpty(ViewBag.pic.Description))
+    {
+        <div>Описание: @ViewBag.pic.Description</div>
+    }
+
+    <div class="d-inline-block">Загружен: @ViewBag.pic.Upload</div>
+    <div class="d-inline-block">Создан: @ViewBag.pic.Created</div>
+    @if (!String.IsNullOrEmpty(ViewBag.pic.Camera))
+    {
+        <div>Камера: @ViewBag.pic.Camera</div>
+    }
+    <br />
+
+    <a class="mr-5" id="sharelink" href="#!">Расшарить</a>
+    <div id="shares-label"><h4>Ссылки:</h4></div>
+    <div id="shares">
+        @foreach (var share in ViewBag.shares)
+        {
+            <div>@share</div>
+        }
+    </div>
+
+    <hr />
+    <h4>Изображение:</h4>
+    <div class="mt-3">
+        @if (ViewBag.pic.Image != null) // style='width:300px; height:200px;'
+        {
+            <img style='max-width:90%;' src="data:image/jpeg;base64,@(Convert.ToBase64String(ViewBag.pic.Image))" />
+        }
+    </div>
+
+    <div id="coms">
+        <h4>Комментарии:</h4>
+        @foreach (var com in Model)
+        {
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <h5>@com.Author :</h5>
+                    <i>@com.Created</i>
+                </div>
+                <div class="col-md-9">
+                    <div style="overflow-wrap:break-word">@com.Text</div><br />
+                </div>
+            </div>
+        }
+    </div>
+    
+    <!--<form asp-action="Picture" asp-controller="Albums" method="post" enctype="multipart/form-data">
+
+        <input name="Pic" class="form-control d-none" value="@ViewBag.pic.Id" />
+        <label class="form-label">Ваш комментарий: </label>
+        <textarea class="form-control" name="Text" rows="3" placeholder="Ваш кооментарий"></textarea>
+        <input type="submit" value="Запостить" />
+    </form> -->
+
+    <div class="row mt-2 mb-3">
+        <div class="col-md-1"></div>
+        <form id="com-form" class="col-md-10 form-inline" method="get" enctype="multipart/form-data">
+            <div class="input-group col-10">
+                <textarea id="com-area" class="form-control" name="Text" rows="3" placeholder="Ваш кооментарий"></textarea>
+            </div>
+            <div class="input-group">
+                <input id="com-btn" type="submit" value="Запостить" class="mt-3" />
+            </div>
+        </form>
+    </div>
+
+</div>

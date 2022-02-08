@@ -1,0 +1,158 @@
+﻿@model List<User>
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+
+<script type="text/javascript">
+    $(document).ready(() => {
+
+        $('.del-user').on("click", (e) => {
+            e.preventDefault();
+            const user = e.currentTarget.parentElement.parentElement;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteUser")',
+                data: { id: user.id },
+                dataType: "json",
+                success: (msg) => {
+                    if (msg) {
+                        console.log(msg)
+                        $(user).fadeOut(1000);
+                    }
+                },
+                error: () => console.log("ERROR")
+            });
+        })
+
+        function albumDelete(e) {
+            e.preventDefault();
+            const album = e.currentTarget.parentElement.parentElement;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteAlbum")',
+                data: { id: album.id },
+                dataType: "json",
+                success: (msg) => {
+                    if (msg) {
+                        console.log(msg)
+                        $(album).fadeOut(1000);
+                    }
+                },
+                error: () => console.log("ERROR")
+            });
+        }
+
+        function pictureDelete(e) {
+            e.preventDefault();
+            const pic = e.currentTarget.parentElement.parentElement;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeletePicture")',
+                data: { id: pic.id },
+                dataType: "json",
+                success: (msg) => {
+                    if (msg) {
+                        console.log(msg)
+                        $(pic).fadeOut(1000);
+                    }
+                },
+                error: () => console.log("ERROR")
+            });
+        }
+
+        function albumClick(e) {
+            //e.preventDefault();
+            $('#insert-pictures').html('');
+            const album = e.currentTarget.parentElement.parentElement;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetPicturesByAlbum")',
+                data: { id: album.id },
+                dataType: "json",
+                success: (arr) => {
+                    let tablemarkup = `<table class="table table-inverse table-hover">
+                                       <caption>Фотографии альбома ${album.id}</caption>
+                                       <thead class="thead-default"><tr>
+                                       <th scope="col">Название</th>
+                                       <th scope="col">Загружено</th><th scope="col">Фото</th>
+                                       <th scope="col"></th></tr></thead><tbody>`
+                    arr.forEach((pic) => {
+                        tablemarkup += `<tr id="${pic.id}">
+                                        <th scope="col-2 row"><a href="#!">${pic.name}</a></th>
+                                        <td>${pic.upload.replace('T',' ')}</td><td>----</td><td>
+                                        <a class="del-pic text-danger" href="#">Удалить</a></td></tr>`
+                    });
+                    tablemarkup += `</tbody></table>`
+                    $('#insert-pictures').html(tablemarkup);
+
+                },
+                error: () => console.log("ERROR")
+            });
+        }
+
+        $('.user-link').on("click", (e) => {
+            e.preventDefault();
+            $('#insert-albums').html('');
+            const user = e.currentTarget.parentElement.parentElement;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetAlbumsByUser")',
+                data: { id: user.id },
+                dataType: "json",
+                success: (arr) => {
+                    let tablemarkup = `<table class="table table-inverse table-hover">
+                                       <caption>Альбомы пользователя ${user.id}</caption>
+                                       <thead class="thead-default"><tr>
+                                       <th scope="col">Альбом</th>
+                                       <th scope="col">Создан</th><th scope="col">Фото</th>
+                                       <th scope="col"></th></tr></thead><tbody>`
+                    arr.forEach((album) => {
+                        tablemarkup += `<tr id="${album.id}">
+                                        <th scope="row"><a class="pic-link" href="#insert-picture">${album.name}</a></th>
+                                        <td>${album.created.replace('T', ' ')}</td><td>${album.num}</td><td>
+                                        <a class="del-album text-danger" href="#">Удалить</a></td></tr>`
+                    });
+                    tablemarkup += `</tbody></table><hr />`
+                    $('#insert-albums').html(tablemarkup);
+                    $('.pic-link').on('click', albumClick);
+                    $('.del-album').on('click', albumDelete);
+                },
+                error: () => console.log("ERROR")
+            });
+        })
+
+    })
+</script>
+
+<table class="table table-inverse table-hover">
+    <caption>Пользователи сайта</caption>
+    <thead class="thead-default">
+        <tr>
+            <th scope="col">Пользователь</th>
+            <th scope="col">ID</th>
+            <th scope="col">Зарегистрирован</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        { 
+            <tr id="@user.Id">
+                <th scope="row">
+                    <a class="user-link" href="#insert-albums">@user.UserName</a>
+                </th>
+                <td>@user.Id</td>
+                <td>@user.Created</td>
+                <td>
+                    <a class="del-user text-danger" href="#">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<hr />
+<div id="insert-albums" name="insert-albums"></div>
+<div id="insert-pictures" name="insert-pictures"></div>
+
+
+

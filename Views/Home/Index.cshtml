@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@{ 
+    string name = User.Identity.IsAuthenticated ? User.Identity.Name : "stranger";
+}
+
+<div class="text-center">
+
+    <h1 class="display-4 m-2 pt-5 pb-5">Welcome, @name!</h1>
+    <form class="m-4 navbar-form form-inline" asp-action="GetShared" asp-controller="Albums" method="post" role="search">
+        <div class="input-group input-group-lg col-11">
+            <input type="search" class="form-control rounded pr-2" name="id" placeholder="Ссылка" />
+            <!--<input type="submit" class="btn btn-outline-primary" value="Search" /> -->
+        </div>
+        <div class="input-group">
+            <!--<input type="search" class="form-control rounded pr-2" name="id" placeholder="Ссылка" /> -->
+            <input type="submit" class="btn btn-outline-primary" value="Search" />
+        </div>
+    </form>
+
+</div>

@@ -1,0 +1,90 @@
+﻿@model List<Comment>
+@{
+    ViewData["Title"] = "ShowPicture";
+}
+<script type="text/javascript">
+
+    $(document).ready(() => {
+
+        $('#com-form').on('submit', (e) => {
+            e.preventDefault();
+        })
+
+        $('#com-btn').on('click', (e) => {
+            e.preventDefault();
+            const comtext = $('#com-area').val();
+            const picture = "@ViewBag.pic.Id";
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("SharedCommentPictureAjax")',
+                    data: {text: comtext, pic: picture },
+                    dataType: "json",
+                    success: (msg) => {
+                        console.log(msg);
+                        const div = document.querySelector('#coms');
+                        const markup = document.createElement("div");
+                        markup.classList = "row mb-2";
+                        markup.innerHTML = `<div class="col-md-3">
+                                        <h5>Вы :</h5><i>${msg}</i></div>
+                                        <div class="col-md-9"><div>${comtext}</div><br /></div>`;
+                        div.appendChild(markup);
+                        $('#com-area').val("");
+                    },
+                    error: () => console.log("ERROR")
+             })
+        })
+
+    })
+</script>
+
+<div class="text-center mt-3">
+
+    <div>
+        <h4>@ViewBag.pic.Name</h4>
+    </div>
+    @if (!String.IsNullOrEmpty(ViewBag.pic.Description))
+    {
+    <div>Описание: @ViewBag.pic.Description</div>
+    }
+
+    <div>Загружен: @ViewBag.pic.Upload</div>
+    <br />
+
+    <hr />
+    <h4>Изображение:</h4>
+    <div class="mt-3">
+        @if (ViewBag.pic.Image != null)
+        {
+        <img style='max-width:90%;' src="data:image/jpeg;base64,@(Convert.ToBase64String(ViewBag.pic.Image))" />
+        }
+    </div>
+
+    <div id="coms">
+        <h4>Комментарии:</h4>
+        @foreach (var com in Model)
+        {
+        <div class="row mb-2">
+            <div class="col-md-3">
+                <h5>@com.Author :</h5>
+                <i>@com.Created</i>
+            </div>
+            <div class="col-md-9">
+                <div>@com.Text</div><br />
+            </div>
+        </div>
+        }
+    </div>
+
+    <div class="row mt-2 mb-3">
+        <div class="col-md-1"></div>
+        <form id="com-form" class="col-md-10 form-inline" method="get" enctype="multipart/form-data">
+            <div class="input-group col-10">
+                <textarea id="com-area" class="form-control" name="Text" rows="3" placeholder="Ваш кооментарий"></textarea>
+            </div>
+            <div class="input-group">
+                <input id="com-btn" type="submit" value="Запостить" class="mt-3" />
+            </div>
+        </form>
+    </div>
+
+</div>

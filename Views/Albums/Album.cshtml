@@ -1,0 +1,244 @@
+﻿@model AlbumPicCommentVM
+@{
+    ViewData["Title"] = "Album";
+}
+<script type="text/javascript">
+    var files = null
+
+    function setSize() {
+        const width = $('#submit').outerWidth();
+        $('#filelabel').innerWidth(width);
+    }
+
+    $(document).ready(() => {
+        setSize()
+
+        $('#sharelink').click((e) => {
+            e.preventDefault();
+            const album = $('#albumid').text();
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("ShareAlbumAjax")',
+                data: { id: album },
+                dataType: "json",
+                success: (shares) => {
+                    console.log(shares);
+                    let markup = "";
+                    shares.forEach((share) => {
+                        markup += `<div>${share}</div>`;
+                    })
+                    $('#shares').html(markup);
+                 },
+                error: () => console.log("ERROR")
+             })
+        })
+
+        $('#files')
+            .bind('change', (e) => {
+                setSize();
+                const elem = e.currentTarget;
+                console.log('file');
+                //console.log(elem);
+                if (elem.files.length > 1) {
+                    elem.innerText = `${elem.files.length} фото`;
+                    $('#filelabel').text(`${elem.files.length} фото`);
+                    console.log('много');
+                }
+                else {
+                    //elem.innerText = elem.files[0].name;
+                    $('#filelabel').text(elem.files[0].name);
+                    console.log('один');
+                }
+                files = elem.files;
+            })
+
+        $('#fileform').on('submit', (e) => {
+            e.preventDefault();
+        })
+
+        $('#com-form').on('submit', (e) => {
+            e.preventDefault();
+        })
+
+        $('#com-btn').on('click', (e) => {
+            e.preventDefault();
+            const text = $('#com-area').val()
+            const album = $('#album-id').val()
+            formdata = new FormData()
+            formdata.append('text', text)
+            formdata.append('album', album)
+
+            $.ajax({
+                    type: "POST",
+                    url: `https://localhost:44392/Albums/PostComment`, //'@Url.Action("UploadPictures")',
+                    data: formdata,
+                    //dataType: 'application/json',
+                    processData: false,
+                    contentType: false,//"multipart/form-data",
+                    dataType: "json",
+                    success: (msg) => {
+                        console.log(msg);
+                        const div = document.querySelector('#coms');
+                        const markup = document.createElement("div");
+                        markup.classList = "row mb-2";
+                        markup.innerHTML = `<div class="col-md-3">
+                                        <h5>Вы :</h5><i>${msg}</i></div>
+                                        <div class="col-md-9"><div>${text}</div><br /></div>`;
+                        div.appendChild(markup);
+                    },
+                    error: () => console.log("ERROR")
+             })
+        })
+
+        $('.btn-light')
+            .on('click', (e) => {
+                e.preventDefault();
+                console.log(files);
+                let formData = new FormData();
+                [...files].forEach((file) => {
+                    formData.append('Images', file);
+                })
+
+                const album = document.querySelector('#Album').value;
+                console.log(album);
+                formData.append('Album', album);
+                $.ajax({
+                    type: "POST",
+                    url: `https://localhost:44392/Albums/UploadPictures`, //'@Url.Action("UploadPictures")',
+                    data: formData,
+                    //dataType: 'application/json',
+                    processData: false,
+                    contentType: false,//"multipart/form-data",
+                    dataType: "json",
+                    success: (ids) => {
+                        console.log(ids);
+                        const div = document.querySelector('#pics-cont');
+                        [...files].forEach((file, i) => {
+                            const img = document.createElement("img");
+                            img.src = URL.createObjectURL(file);
+                            img.style = 'max-width: 90%;'
+                            img.onload = function () {
+                                URL.revokeObjectURL(this.src);
+                            }
+                            div.appendChild(img);
+                            const link = document.createElement("p");
+                            link.innerHTML = `<a href="Albums/Picture/${ids[i]}><i>${file.name}</i></a>`
+                            div.appendChild(link);
+                        })
+                    },
+                    error: () => console.log("ERROR")
+                })
+            })
+    })
+</script>
+
+<div class="text-center">
+
+    <div class="row mb-5">
+        <div class="col-9">
+            <div>
+                <h2 class="mt-4">@Model.Album.Name</h2>
+            </div>
+            <div><h5 class="d-inline-block">Описание:</h5> @Model.Album.Comment</div>
+            <div class="d-inline-block mr-3">Создан: <i>@Model.Album.Created</i></div>
+            <div class="d-inline-block">Изменен: <i>@Model.Album.Changed</i></div>
+            <br />
+
+            <div id="albumid" class="d-none">@Model.Album.Id</div>
+            <a class="mr-5" id="sharelink" href="#!"> <!--asp-controller="Albums" asp-action="ShareAlbum"
+               asp-route-id="@Model.Album.Id"-->Расшарить</a>
+            <a asp-controller="Albums" asp-action="Edit"
+               asp-route-id="@Model.Album.Id">Редактировать</a>
+        </div>
+        
+        <div class="col-2">
+            <div id="fileform row"> <!--method="post" enctype="multipart/form-data" -->
+
+                <!-- <div class="d-inline-block">
+                <label for="myfile" class="form-label">Файл:</label>
+                <input name="Images" type="file" id="myfile" class="form-control-file" multiple />
+            </div> -->
+
+                <div class="mt-3 col-3">
+                    <label id="filelabel" style="overflow:hidden" for="files" class="btn btn-dark" >Select</label> <!-- p-1 pl-5 pr-5 -->
+                    <input class="d-none" id="files" style="visibility:hidden;" type="file" names="Images" multiple>
+                </div>
+
+                <div class="col-2">
+                    <input id="Album" class="d-none" value="@Model.Album.Id" />
+                    <input id="submit" class="btn btn-light pr-5 pl-5" type="submit" value="Upload" />
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="shares-label"><h4>Ссылки:</h4></div>
+    <div id="shares">
+        @foreach (var share in ViewBag.shares)
+        {
+            <div>@share</div>
+        }
+    </div>
+
+    <h4 class="mt-5">Изображения:</h4>
+    <div id="pics-cont">
+        @if (Model.Pics.Count() == 0)
+        {
+            <div>
+                <p>Пока нет изображений...</p>
+            </div>
+        }
+        @foreach (var pic in Model.Pics)
+        {
+            <div class="mt-3">
+
+                @if (pic.Image != null) // style='width:300px; height:200px;'
+                {
+                    <img style='max-width:90%;' src="data:image/jpeg;base64,@(Convert.ToBase64String(pic.Image))" />
+                }
+                @if (!string.IsNullOrEmpty(pic.Name))
+                {
+                    <p>
+                        <a asp-controller="Albums" asp-action="Picture"
+                           asp-route-id="@pic.Id">
+                            <i>@pic.Name</i>
+                        </a>
+                    </p>
+                }
+
+            </div>
+        }
+    </div>
+
+    <div id="coms">
+        <h4 class="mb-2">Комментарии:</h4>
+        @foreach (var com in Model.Coms)
+        {
+            <div class="row mb-2">
+                <div class="col-md-3">
+                    <h5>@com.Author :</h5>
+                    <i>@com.Created</i>
+                </div>
+                <div class="col-md-9">
+                    <div>@com.Text</div><br />
+                </div>
+            </div>
+        }
+    </div>
+    <div class="row mt-2 mb-3">
+        <div class="col-md-1"></div>
+        <form id="com-form" class="col-md-10 form-inline" asp-action="Album" asp-controller="Albums" method="post" enctype="multipart/form-data">
+            <input id="album-id" name="Album" class="form-control d-none" value="@Model.Album.Id" />
+            <div class="input-group col-10">
+                <textarea id="com-area" class="form-control" name="Text" rows="3" placeholder="Ваш кооментарий"></textarea>
+            </div>
+            <!--<textarea id="com-area" class="form-control" name="Text" rows="3" placeholder="Ваш кооментарий"></textarea> -->
+            <!--<input id="com-btn" type="submit" value="Запостить" class="mt-3" /> -->
+            <div class="input-group">
+                <input id="com-btn" type="submit" value="Запостить" class="mt-3" />
+            </div>
+        </form>
+    </div>
+
+</div>

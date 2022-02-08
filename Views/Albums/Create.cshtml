@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Upload Pic";
+}
+
+<form asp-action="Create" asp-controller="Albums" method="post" enctype="multipart/form-data">
+    <p>
+        <label class="form-label">Имя альбома: </label>
+        <input class="form-control" name="Name" class="form-control" placeholder="Название"/>
+    </p>
+    <p>
+        <label>Описание альбома:</label>
+        
+        <textarea class="form-control" name="Comment" rows="3" placeholder="Описание"></textarea>
+    </p>
+    <p>
+        <input class="btn btn-dark" type="submit" value="Создать" />
+    </p>
+</form>
+
